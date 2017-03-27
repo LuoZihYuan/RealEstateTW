@@ -1,7 +1,7 @@
-./resources
+/resources/*
 
 # Databases #
-.db
+*.db
 *.sql
 *.sqlite
 *.sqlite3
