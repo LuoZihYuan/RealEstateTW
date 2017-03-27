@@ -85,3 +85,4 @@ LOCK = Lock()
 POOL = Pool(processes=10, initializer=pre_download, initargs=(LOCK,))
 POOL.map(downloader, SEASONS)
 POOL.close()
+print "Finish"
