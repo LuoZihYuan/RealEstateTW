@@ -82,7 +82,7 @@ if FILE_COUNT > 1:
     TOTAL_THREADS = min(TOTAL_THREADS, FILE_COUNT)
 print "Downloading..."
 LOCK = Lock()
-POOL = Pool(processes=10, initializer=pre_download, initargs=(LOCK,))
+POOL = Pool(processes=TOTAL_THREADS, initializer=pre_download, initargs=(LOCK,))
 POOL.map(downloader, SEASONS)
 POOL.close()
 print "Finish"
