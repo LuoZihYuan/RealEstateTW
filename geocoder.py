@@ -1,5 +1,6 @@
 """ Integrate all common geocoding APIs """
 # XXX: use module instead of class
+
 import os
 import json
 import shutil

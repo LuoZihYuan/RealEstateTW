@@ -1,6 +1,9 @@
 config.yaml
 /resources/*
 
+# Python #
+*.pyc
+
 # Databases #
 *.db
 *.sql
