@@ -54,6 +54,8 @@ def get_next_path():
 print "Checking for newfiles..."
 SUBPATHS = []
 for folder in os.listdir(RESOURCES_PATH)[1:]:
+    if not os.path.isdir(RESOURCES_PATH + folder):
+        continue
     for csvfile in os.listdir(RESOURCES_PATH + folder):
         if len(csvfile) == 16:
             subpath = folder + "/" + csvfile
@@ -101,25 +103,27 @@ LONGITUDE_FIELD = u"經度"
 BANNED_KEYWORD = u"地號"
 
 next_path = get_next_path()
-print "Geocoding " + next_path
 while next_path:
+    print "Geocoding " + next_path
     with open(RESOURCES_PATH + next_path, "r") as csvinput:
         HISTORY["active"] = next_path
+        update_yaml()
         reader = csv.DictReader(csvinput, encoding="big5", errors="ignore")
         fieldnames = reader.fieldnames + [LATITUDE_FIELD, LONGITUDE_FIELD]
         with open(RESOURCES_PATH + TEMPORARY_FILE, "a") as createfile:
             pass
         with open(RESOURCES_PATH + TEMPORARY_FILE, "r+") as csvoutput:
+            skip_reader = csv.DictReader(csvoutput, encoding="big5", errors="ignore")
             writer = csv.DictWriter(csvoutput, fieldnames, encoding="big5", errors="ignore")
             previous_address = ""
             previous_gps = {"lat": None, "lon": None}
-            if not csvoutput.readline():
+            if not skip_reader.fieldnames:
                 writer.writeheader()
-            while csvoutput.readline():
-                discarded_row = reader.next()
-                previous_address = discarded_row[ADDRESS_FIELD]
-                previous_gps["lat"] = discarded_row[LATITUDE_FIELD]
-                previous_gps["lon"] = discarded_row[LONGITUDE_FIELD]
+            for row in skip_reader:
+                previous_address = row[ADDRESS_FIELD]
+                previous_gps["lat"] = row[LATITUDE_FIELD]
+                previous_gps["lon"] = row[LONGITUDE_FIELD]
+                reader.next()
             for row in reader:
                 rough_address = row[ADDRESS_FIELD]
                 if BANNED_KEYWORD in rough_address:
