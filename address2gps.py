@@ -101,6 +101,7 @@ ADDRESS_FIELD = u"土地區段位置或建物區門牌"
 LATITUDE_FIELD = u"緯度"
 LONGITUDE_FIELD = u"經度"
 BANNED_KEYWORD = u"地號"
+GARBLED_LETTER = "&#"
 
 next_path = get_next_path()
 while next_path:
@@ -126,7 +127,7 @@ while next_path:
                 reader.next()
             for row in reader:
                 rough_address = row[ADDRESS_FIELD]
-                if BANNED_KEYWORD in rough_address:
+                if BANNED_KEYWORD in rough_address or GARBLED_LETTER in rough_address:
                     pass
                 elif previous_address == rough_address:
                     row[LATITUDE_FIELD] = previous_gps["lat"]
