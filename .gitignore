@@ -1,4 +1,5 @@
 config.yaml
+geocode_history.yaml
 /resources/*
 
 # Python #
