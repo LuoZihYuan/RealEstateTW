@@ -1,0 +1,7 @@
+# this file specifies priority of services provided by each geo-service providers
+geocode:
+  - Bing
+  - Google
+reverse_geocode:
+  - Google
+  - Bing

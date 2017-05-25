@@ -1,0 +1,21 @@
+website: https://developers.google.com/maps/
+service:
+  geocode:
+    description: https://developers.google.com/maps/documentation/geocoding/start
+    api_path: https://maps.googleapis.com/maps/api/geocode/json?address=$2&key=$1
+    constraint:
+      $1: ["^((?![#&]).)+$"]
+      $2: ["^((?![#&]).)+$"]
+    api_key:
+      -
+        key: !!python/str
+        expired: False
+        expired_time: ~
+  reverse_geocode:
+    description: ~
+    api_path: ~
+    api_key:
+      -
+        key: !!python/str
+        expired: False
+        expired_time: ~
