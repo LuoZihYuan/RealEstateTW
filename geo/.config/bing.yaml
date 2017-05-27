@@ -13,16 +13,8 @@ service:
         nl-BE, nn, nso, or, pa, pa-Arab, pl, prs-Arab, pt-BR, pt-PT, qut-Latn, quz, ro, ru, rw, sd-Arab,
         si, sk, sl, sq, sr-Cyrl-BA, sr-Cyrl-RS, sr-Latn-RS, sv, sw, ta, te, tg-Cyrl, th, ti, tk-Latn,
         tn, tr, tt-Cyrl, ug-Arab, uk, ur, uz-Latn, vi, wo, xh, yo-Latn, zh-Hans, zh-Hant, zh-TW, zu]
-    api_key:
+    api_keys:
       -
-        key: !!python/str
-        expired: False
-        expired_time: ~
-  reverse_geocode:
-    description: ~
-    api_path: ~
-    api_key:
-      -
-        key: ~
-        expired: False
-        expired_time: ~
+        key: "" # !!python/str
+        expired: False # !!python/bool
+        expired_time: ~ # !!timestamp

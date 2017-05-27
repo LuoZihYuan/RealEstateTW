@@ -1,0 +1,39 @@
+# This file is written only to give out examples of config file, and will not be read by any code.
+website: !!python/str # Website of Geo Service Provider (Required)
+service: # Service Dict (Required)
+  geocode: # Geocode Service (Optional)
+    description: !!python/str # Description of Geocode Service (Required)
+    api_path: !!python/str # Path for internet request (Optional)
+    constraint: # Constraint Dict (Optional)
+      $1: !!python/list # List of all possible matches using regular expression (Optional)
+      # $2: !!python/list
+      # ...: ...
+      # $N: !!python/list
+    api_keys: # Condition of keys (Optional)
+      -
+        key: !!python/str # Key for internet request (Required)
+        expired: !!python/bool # (Required)
+        expired_time: !!timestamp # (Required)
+      # -
+      #   key: !!python/str
+      #   expired: !!python/bool
+      #   expired_time: !!timestamp
+      # ...
+  reverse_geocode: # Reverse Geocode Service (Optional)
+    description: !!python/str # Description of Reverse Geocode Service (Required)
+    api_path: !!python/str # Path for internet request (Optional)
+    constraint: # Constraint Dict (Optional)
+      $1: !!python/list # List of all possible matches using regular expression (Optional)
+      # $2: !!python/list
+      # ...: ...
+      # $N: !!python/list
+    api_keys: # Condition of keys (Optional)
+      -
+        key: !!python/str # Key for internet request (Required)
+        expired: !!python/bool # (Required)
+        expired_time: !!timestamp # (Required)
+      # -
+      #   key: !!python/str
+      #   expired: !!python/bool
+      #   expired_time: !!timestamp
+      # ...

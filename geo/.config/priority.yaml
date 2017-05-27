@@ -1,0 +1,9 @@
+# This file specifies priority of services by each providers
+geocode: # !!python/list
+  - Bing
+  - Google
+  # - ...
+reverse_geocode: # !!python/list
+  - Bing
+  - Google
+  # - ...

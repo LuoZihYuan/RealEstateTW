@@ -6,16 +6,8 @@ service:
     constraint:
       $1: ["^((?![#&]).)+$"]
       $2: ["^((?![#&]).)+$"]
-    api_key:
+    api_keys:
       -
-        key: !!python/str
-        expired: False
-        expired_time: ~
-  reverse_geocode:
-    description: ~
-    api_path: ~
-    api_key:
-      -
-        key: !!python/str
-        expired: False
-        expired_time: ~
+        key: "" # !!python/str
+        expired: False # !!python/bool
+        expired_time: ~ # !!timestamp

@@ -2,14 +2,14 @@
 
 __all__ = ["Bing"]
 
-# Python Standard Libraries
+# Python Standard Library
 import json
 import datetime
-# Third Party Libraries
+# Third Party Library
 import yaml
 import requests
-# Dependent Modules
-from geo.provider import Provider, ProviderOutOfAPIKeys, ProviderServerError
+# Dependent Module
+from geo.provider import Provider, Placeholder, ProviderOutOfAPIKeys, ProviderServerError
 from geo.provider import AddressError, CultureError
 
 class Bing(Provider):
@@ -22,7 +22,7 @@ class Bing(Provider):
 
         # shortcut for lengthy dictionary access
         self.config_geocode = self.config["service"]["geocode"]
-        self.config_reverse_geocode = self.config["service"]["reverse_geocode"]
+        # self.config_reverse_geocode = self.config["service"]["reverse_geocode"]
 
         # preparation for geocode method
         self.geocode_keys = []
@@ -31,10 +31,10 @@ class Bing(Provider):
                 self.geocode_keys.append(api_key)
 
         # preparation for reverse geocode method
-        self.reverse_geocode_keys = []
-        for api_key in self.config_reverse_geocode["api_keys"]:
-            if api_key["key"] and not api_key["expired"]:
-                self.reverse_geocode_keys.append(api_key)
+        # self.reverse_geocode_keys = []
+        # for api_key in self.config_reverse_geocode["api_keys"]:
+        #     if api_key["key"] and not api_key["expired"]:
+        #         self.reverse_geocode_keys.append(api_key)
 
     @classmethod
     def geocode_available(cls):
@@ -52,14 +52,14 @@ class Bing(Provider):
         culture = "en-US"
         if "culture" in kwargs:
             culture = kwargs["culture"]
-            if culture not in self.config_geocode["constraint"][self.PLACEHOLDER_CULTURE]:
+            if culture not in self.config_geocode["constraint"][Placeholder.CULTURE]:
                 raise CultureError(self.__class__.__name__, culture)
 
         # attempt to geocode until no keys are available
-        query_path = self.config_geocode["api_path"].replace(self.PLACEHOLDER_CULTURE, culture)
-        query_path = query_path.replace(self.PLACEHOLDER_ADDRESS, address)
+        query_path = self.config_geocode["api_path"].replace(Placeholder.CULTURE, culture)
+        query_path = query_path.replace(Placeholder.ADDRESS, address)
         while self.geocode_keys:
-            full_path = query_path.replace(self.PLACEHOLDER_API_KEY, self.geocode_keys[0]["key"])
+            full_path = query_path.replace(Placeholder.API_KEY, self.geocode_keys[0]["key"])
             response = json.loads(requests.get(full_path).text)
             if response["statusCode"] != 401 and response["statusCode"] != 403:
                 break
@@ -81,15 +81,3 @@ class Bing(Provider):
             coordinates = response["resourceSets"][0]["resources"][0]["point"]["coordinates"].copy()
             return {"lat": coordinates[0], "lon": coordinates[1]}
         return None
-
-    @classmethod
-    def reverse_geocode_available(cls):
-        with open(__file__.replace(".py", ".yaml"), "r") as config_in:
-            config = yaml.load(config_in)
-            for api_key in config["service"]["reverse_geocode"]["api_keys"]:
-                if not api_key["expired"]:
-                    return True
-        return False
-
-    def reverse_geocode(self, latitude, longitude):
-        raise NotImplementedError
