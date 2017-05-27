@@ -1,8 +1,7 @@
 """ Manages geo service provided by Bing """
 
-__all__ = ["Bing"]
-
 # Python Standard Library
+import os
 import json
 import datetime
 # Third Party Library
@@ -38,7 +37,10 @@ class Bing(Provider):
 
     @classmethod
     def geocode_available(cls):
-        with open(__file__.replace(".py", ".yaml"), "r") as config_in:
+        filename = os.path.basename(__file__)
+        filefolder = os.path.abspath(os.path.join(__file__, os.pardir))
+        config_path = os.path.join(filefolder, "config/" + filename.replace(".py", ".yaml"))
+        with open(config_path, "r") as config_in:
             config = yaml.load(config_in)
             for api_key in config["service"]["geocode"]["api_keys"]:
                 if not api_key["expired"]:
@@ -52,14 +54,14 @@ class Bing(Provider):
         culture = "en-US"
         if "culture" in kwargs:
             culture = kwargs["culture"]
-            if culture not in self.config_geocode["constraint"][Placeholder.CULTURE]:
+            if culture not in self.config_geocode["constraint"][str(Placeholder.CULTURE)]:
                 raise CultureError(self.__class__.__name__, culture)
 
         # attempt to geocode until no keys are available
-        query_path = self.config_geocode["api_path"].replace(Placeholder.CULTURE, culture)
-        query_path = query_path.replace(Placeholder.ADDRESS, address)
+        query_path = self.config_geocode["api_path"].replace(str(Placeholder.CULTURE), culture)
+        query_path = query_path.replace(str(Placeholder.ADDRESS), address)
         while self.geocode_keys:
-            full_path = query_path.replace(Placeholder.API_KEY, self.geocode_keys[0]["key"])
+            full_path = query_path.replace(str(Placeholder.API_KEY), self.geocode_keys[0]["key"])
             response = json.loads(requests.get(full_path).text)
             if response["statusCode"] != 401 and response["statusCode"] != 403:
                 break

@@ -1,7 +1,5 @@
 """ Manages geo service provided by Google """
 
-__all__ = ["Google"]
-
 # Python Standard Library
 import json
 import datetime
@@ -50,9 +48,9 @@ class Google(Provider):
         super(Google, self).geocode(address, **kwargs)
 
         # attempt to geocode until no keys are available
-        query_path = self.config_geocode["api_path"].replace(Placeholder.ADDRESS, address)
+        query_path = self.config_geocode["api_path"].replace(str(Placeholder.ADDRESS), address)
         while self.geocode_keys:
-            full_path = query_path.replace(Placeholder.API_KEY, self.geocode_keys[0]["key"])
+            full_path = query_path.replace(str(Placeholder.API_KEY), self.geocode_keys[0]["key"])
             response = json.loads(requests.get(full_path).text)
             status = response["status"]
             if status != "OVER_QUERY_LIMIT" and status != "REQUEST_DENIED":
