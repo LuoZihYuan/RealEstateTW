@@ -61,12 +61,12 @@ for key in PROVIDERS:
     if key not in PRIORITY["geocode"]:
         GEOCODE_INSTANCES.append(PROVIDERS[key])
 
-# reverse_geocode_instances = []
+# REVERSE_GEOCODE_INSTANCES = []
 # for pro_name in PRIORITY["reverse_geocode"]:
-#     reverse_geocode_instances.append(providers[pro_name])
+#     REVERSE_GEOCODE_INSTANCES.append(providers[pro_name])
 # for key in providers:
 #     if key not in PRIORITY["reverse_geocode"]:
-#         reverse_geocode_instances.append(providers[key])
+#         REVERSE_GEOCODE_INSTANCES.append(providers[key])
 
 def geocode(address, provider=None, **kwargs):
     """ Integrate geocode service of each provider """

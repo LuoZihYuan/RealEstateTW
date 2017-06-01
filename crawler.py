@@ -1,13 +1,15 @@
+"""
+    This module crawls csv files from the Actual Price Registration Platform
+"""
 
-""" This module crawls csv files from the Actual Price Registration Platform """
-
+# Standard Python Library
 import os
 import re
 import sys
 from io import BytesIO
 from multiprocessing import Lock, Pool
 from zipfile import ZipFile
-
+# Third Party Library
 import requests
 from bs4 import BeautifulSoup
 
@@ -48,9 +50,9 @@ def downloader(season):
         file_size = int(http_header["Content-Length"])
     # locks stdout
     SHARED_LOCK.acquire()
-    print "Address: " + url
-    print "FileName: '" +  file_name + "'" if file_name else "FileName: Unknown"
-    print "Size: " + formatted_size(file_size) if file_size else "Size: Unknown"
+    print("Address: " + url)
+    print("FileName: '" +  file_name + "'" if file_name else "FileName: Unknown")
+    print("Size: " + formatted_size(file_size) if file_size else "Size: Unknown")
     SHARED_LOCK.release()
     folder_name = os.path.splitext(file_name)[0]
     if not os.path.exists(RESOURCES_PATH + folder_name):
@@ -65,24 +67,24 @@ if not os.path.exists(RESOURCES_PATH):
     os.makedirs(RESOURCES_PATH)
 # TODO: Haven't yet check for local files
 SEASONS = []
-print "Checking for updates..."
+print("Checking for updates...")
 HISTORY_PAGE = requests.get("http://plvr.land.moi.gov.tw/DownloadHistory_ajax_list")
 SOUP = BeautifulSoup(HISTORY_PAGE.text, "html.parser")
 for seasonHTML in SOUP.select("select#historySeason_id > option"):
     SEASONS.append(str(seasonHTML.get('value')))
 FILE_COUNT = len(SEASONS)
-print "Missing %d files\n" %(FILE_COUNT)
+print("Missing %d files\n" %(FILE_COUNT))
 
 TOTAL_THREADS = 1
 if FILE_COUNT > 1:
     if sys.version_info.major == 2:
-        TOTAL_THREADS = int(raw_input("Download threads: "))
+        TOTAL_THREADS = int(input("Download threads: "))
     elif sys.version_info.major == 3:
         TOTAL_THREADS = int(input("Download threads: "))
     TOTAL_THREADS = min(TOTAL_THREADS, FILE_COUNT)
-print "Downloading..."
+print("Downloading...")
 LOCK = Lock()
 POOL = Pool(processes=TOTAL_THREADS, initializer=pre_download, initargs=(LOCK,))
 POOL.map(downloader, SEASONS)
 POOL.close()
-print "Finish"
+print("Finish")
