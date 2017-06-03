@@ -12,11 +12,12 @@ import geo
 import yaml
 import unicodecsv as csv
 
+CONFIG_PATH = "config/"
 RESOURCES_PATH = "resources/"
 GEOCODE_HISTORY = "geocode_history.yaml"
 
 try:
-    YAMLSTREAM = open(GEOCODE_HISTORY, "r+")
+    YAMLSTREAM = open(CONFIG_PATH + GEOCODE_HISTORY, "r+")
 except IOError:
     print("Unable to access critical file/directory")
 HISTORY = yaml.load(YAMLSTREAM)

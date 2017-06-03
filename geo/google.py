@@ -7,8 +7,9 @@ import datetime
 import yaml
 import requests
 # Dependent Module
-from geo.provider import Provider, Placeholder, ProviderOutOfAPIKeys, ProviderServerError
-from geo.provider import AddressError
+from .settings import *
+from .provider import Provider, Placeholder, provider_config_update
+from .provider import ProviderOutOfAPIKeys, ProviderServerError, AddressError
 
 class Google(Provider):
     """
@@ -37,11 +38,13 @@ class Google(Provider):
 
     @classmethod
     def geocode_available(cls):
-        with open(__file__.replace(".py", ".yaml"), "r") as config_in:
-            config = yaml.load(config_in)
-            for api_key in config["service"]["geocode"]["api_keys"]:
-                if not api_key["expired"]:
-                    return True
+        filename = os.path.basename(__file__)
+        path = os.path.join(__config__, filename.replace(".py", ".yaml"))
+        with open(path, "r") as stream:
+            config = yaml.load(stream)
+        for api_key in config["service"]["geocode"]["api_keys"]:
+            if not api_key["expired"]:
+                return True
         return False
 
     def geocode(self, address, **kwargs):
@@ -59,7 +62,7 @@ class Google(Provider):
             expired_key["expired"] = True
             expired_key["expired_time"] = datetime.datetime.now()
         else:
-            self.open_config()
+            open_file(self.__yaml__)
             raise ProviderOutOfAPIKeys(self.__class__.__name__)
 
         # deal with possible error status

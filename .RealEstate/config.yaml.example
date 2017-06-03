@@ -7,25 +7,3 @@ crawler:
     path: "http://plvr.land.moi.gov.tw/DownloadHistory?type=season&fileName=REQUEST_NAME"
     placeholder:
       requestName: "REQUEST_NAME"
-
-geocoder:
-  - 
-    name: "Bing Maps"
-    description: "Convert address to GPS location with Bing Maps Locations API.
-                  For more information: https://msdn.microsoft.com/zh-tw/library/ff701715.aspx"
-    version: "V8"
-    path: "https://dev.virtualearth.net/REST/v1/Locations?q=locationQuery&o=json&culture=zh-TW&key=BingMapsKey"
-    placeholder:
-      address: "locationQuery"
-      key: "BingMapsKey"
-    key: []
-  - 
-    name: "Google Maps"
-    description: "Convert address to GPS location with Google Maps Geocoding API.
-                  For more information: https://developers.google.com/maps/documentation/geocoding/start"
-    version: ~
-    path: "https://maps.googleapis.com/maps/api/geocode/json?address=ADDRESS&key=YOUR_API_KEY"
-    placeholder: 
-      address: "ADDRESS"
-      key: "YOUR_API_KEY"
-    key: []

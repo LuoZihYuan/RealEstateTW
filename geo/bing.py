@@ -8,8 +8,9 @@ import datetime
 import yaml
 import requests
 # Dependent Module
-from geo.provider import Provider, Placeholder, ProviderOutOfAPIKeys, ProviderServerError
-from geo.provider import AddressError, CultureError
+from .settings import *
+from .provider import Provider, Placeholder, provider_config_update
+from .provider import ProviderOutOfAPIKeys, ProviderServerError, AddressError, CultureError
 
 class Bing(Provider):
     """
@@ -38,15 +39,15 @@ class Bing(Provider):
     @classmethod
     def geocode_available(cls):
         filename = os.path.basename(__file__)
-        filefolder = os.path.abspath(os.path.join(__file__, os.pardir))
-        config_path = os.path.join(filefolder, "config/" + filename.replace(".py", ".yaml"))
-        with open(config_path, "r") as config_in:
-            config = yaml.load(config_in)
-            for api_key in config["service"]["geocode"]["api_keys"]:
-                if not api_key["expired"]:
-                    return True
+        path = os.path.join(__config__, filename.replace(".py", ".yaml"))
+        with open(path, "r") as stream:
+            config = yaml.load(stream)
+        for api_key in config["service"]["geocode"]["api_keys"]:
+            if not api_key["expired"]:
+                return True
         return False
 
+    @provider_config_update
     def geocode(self, address, **kwargs):
         super(Bing, self).geocode(address, **kwargs)
 
@@ -69,7 +70,7 @@ class Bing(Provider):
             expired_key["expired"] = True
             expired_key["expired_time"] = datetime.datetime.now()
         else:
-            self.open_config()
+            open_file(self.__yaml__)
             raise ProviderOutOfAPIKeys(self.__class__.__name__)
 
         # deal with possible error status code

@@ -15,6 +15,7 @@ from shutil import copyfile
 import yaml
 # Dependent Module
 import geo.dependency as dependency
+from .settings import *
 from .provider import *
 
 # Restrict this package using Python3 and above only
@@ -27,22 +28,16 @@ class TryAgainLater(Exception):
 
 PRIORITY_NAME = "priority.yaml"
 
-__folder__ = os.path.abspath(os.path.join(__file__, os.pardir))
-__priority__ = os.path.join(__folder__, "config/" + PRIORITY_NAME)
+__priority__ = os.path.join(__config__, PRIORITY_NAME)
 
 # load in user defined priority
 try:
     with open(__priority__, "r") as stream:
         PRIORITY = yaml.load(stream)
 except:
-    DEFAULT_PRIORITY = os.path.join(__folder__, ".config/" + PRIORITY_NAME)
+    DEFAULT_PRIORITY = os.path.join(__default__ + PRIORITY_NAME)
     copyfile(DEFAULT_PRIORITY, __priority__)
-    if sys.platform.startswith("darwin"):
-        os.system('open "%s"' %(__priority__))
-    elif sys.platform.startswith("linux"):
-        os.system('xdg-open "%s"' %(__priority__))
-    elif sys.platform.startswith("win"):
-        os.system('start "%s"' %(__priority__))
+    open_file(__priority__)
     raise
 
 # instantiate providers in dependency
