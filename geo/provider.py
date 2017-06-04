@@ -78,7 +78,7 @@ class Provider(object):
             raise TypeError("Class 'Provider' should not be directly instantiated.")
         return super(Provider, cls).__new__(cls, *args, **kwargs)
 
-    def __init__(self, filepath):
+    def __init__(self, filepath, showPrompt=True):
         # load in configuration file for corresponding geo service providers
         filename = os.path.basename(filepath)
         self.__yaml__ = os.path.join(__config__, filename.replace(".py", ".yaml"))
@@ -91,15 +91,15 @@ class Provider(object):
             open_file(self.__yaml__)
             raise
 
-        # prompt rough message of geo service providers
-        print("Provider: " + self.__class__.__name__)
-        print("Website: ", end='')
+        # prompt rough message of geo service providers if successfully inheritted
         try:
-            print('"%s"' %(self.config["website"]))
+            self.website = self.config["website"]
         except KeyError:
-            print()
             open_file(self.__yaml__)
             raise
+        if showPrompt:
+            print("Provider: " + self.__class__.__name__)
+            print("Website: " + self.website)
 
     @abc.abstractclassmethod
     def geocode_available(cls):

@@ -11,13 +11,13 @@ import shutil
 import geo
 import yaml
 import unicodecsv as csv
+# Dependent Module
+from settings import *
 
-CONFIG_PATH = "config/"
-RESOURCES_PATH = "resources/"
 GEOCODE_HISTORY = "geocode_history.yaml"
 
 try:
-    YAMLSTREAM = open(CONFIG_PATH + GEOCODE_HISTORY, "r+")
+    YAMLSTREAM = open(__config__ + GEOCODE_HISTORY, "r+")
 except IOError:
     print("Unable to access critical file/directory")
 HISTORY = yaml.load(YAMLSTREAM)
@@ -57,10 +57,10 @@ def get_next_path():
 
 print("Checking for newfiles...")
 SUBPATHS = []
-for folder in os.listdir(RESOURCES_PATH)[1:]:
-    if not os.path.isdir(RESOURCES_PATH + folder):
+for folder in os.listdir(__resources__)[1:]:
+    if not os.path.isdir(__resources__ + folder):
         continue
-    for csvfile in os.listdir(RESOURCES_PATH + folder):
+    for csvfile in os.listdir(__resources__ + folder):
         if len(csvfile) == 16:
             subpath = folder + "/" + csvfile
             cat = categorize(subpath)
@@ -108,14 +108,14 @@ BANNED_KEYWORD = u"地號"
 NEXT_PATH = get_next_path()
 while NEXT_PATH:
     print("Geocoding " + NEXT_PATH)
-    with open(RESOURCES_PATH + NEXT_PATH, "r") as csvinput:
+    with open(__resources__ + NEXT_PATH, "r") as csvinput:
         HISTORY["active"] = NEXT_PATH
         update_yaml()
         READER = csv.DictReader(csvinput, encoding="big5", errors="ignore")
         FIELDNAMES = READER.fieldnames + [LATITUDE_FIELD, LONGITUDE_FIELD]
-        with open(RESOURCES_PATH + TEMPORARY_FILE, "a") as createfile:
+        with open(__resources__ + TEMPORARY_FILE, "a") as createfile:
             pass
-        with open(RESOURCES_PATH + TEMPORARY_FILE, "r+") as csvoutput:
+        with open(__resources__ + TEMPORARY_FILE, "r+") as csvoutput:
             SKIP_READER = csv.DictReader(csvoutput, encoding="big5", errors="ignore")
             WRITER = csv.DictWriter(csvoutput, FIELDNAMES, encoding="big5", errors="ignore")
             PREVIOUS_ADDRESS = ""
@@ -142,8 +142,8 @@ while NEXT_PATH:
                     PREVIOUS_GPS["lat"] = result["lat"]
                     PREVIOUS_GPS["lon"] = result["lon"]
                 WRITER.writerow(row)
-    shutil.copyfile(RESOURCES_PATH + TEMPORARY_FILE, RESOURCES_PATH + NEXT_PATH)
-    os.remove(RESOURCES_PATH + TEMPORARY_FILE)
+    shutil.copyfile(__resources__ + TEMPORARY_FILE, __resources__ + NEXT_PATH)
+    os.remove(__resources__ + TEMPORARY_FILE)
     HISTORY["done"][categorize(NEXT_PATH)].append(NEXT_PATH)
     HISTORY["active"] = ""
     update_yaml()

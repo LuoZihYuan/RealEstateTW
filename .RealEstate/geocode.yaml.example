@@ -1,9 +1,9 @@
-active: ~
+active: !!python/str
 done:
-  presold: []
-  rent: []
-  sold: []
+  presold: !!python/list
+  rent: !!python/list
+  sold: !!python/list
 queue:
-  presold: []
-  rent: []
-  sold: []
+  presold: !!python/list
+  rent: !!python/list
+  sold: !!python/list

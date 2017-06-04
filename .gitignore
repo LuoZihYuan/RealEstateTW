@@ -3,6 +3,7 @@ config/
 resources/
 
 # Python #
+__pycache__/
 *.pyc
 
 # Databases #

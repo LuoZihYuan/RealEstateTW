@@ -18,7 +18,7 @@ class Bing(Provider):
         of Bing the same paramenters as other geo service providers.
     """
     def __init__(self):
-        super(Bing, self).__init__(__file__)
+        super(Bing, self).__init__(__file__, showPrompt=False)
 
         # shortcut for lengthy dictionary access
         self.config_geocode = self.config["service"]["geocode"]

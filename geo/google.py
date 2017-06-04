@@ -18,7 +18,7 @@ class Google(Provider):
     """
     def __init__(self):
 
-        super(Google, self).__init__(__file__)
+        super(Google, self).__init__(__file__, showPrompt=False)
 
         # shortcut for lengthy dictionary access
         self.config_geocode = self.config["service"]["geocode"]

@@ -3,6 +3,7 @@ config/
 
 # Python #
 __pycache__/
+*.pyc
 
 # OS generated files #
 .DS_Store
