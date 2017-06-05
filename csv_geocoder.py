@@ -7,28 +7,26 @@
 # Python Standard Library
 import os
 import re
+import csv
 import time
 from shutil import copyfile
 from enum import Enum, unique
 # Third Party Library
 import geo
 import yaml
-import unicodecsv as csv
 # Dependent Module
 from settings import *
 
+# user specified constants
+DEAL_PRI = ['A', 'B', 'C'] # (Required)
+COUNTY_PRI = ['A', 'B', 'D', 'E', 'F', 'H', 'C', 'G', 'I', 'J', 'K',\
+              'M', 'N', 'O', 'P', 'Q', 'T', 'U', 'V', 'W', 'X', 'Z'] # (Optional)
+SAMPLE_RATE = 5
 
 # shared CONSTANTS and functions for module
 HISTORY_FILE = os.path.join(__config__, "geocode_history.yaml")
 BLANK_HISTORY = os.path.join(__hidden__, "geocode_history.yaml")
 TEMPORARY_FILE = os.path.join(__resources__, ".temp.CSV")
-DEAL_PRI = ['A', 'B', 'C'] # (Required)
-COUNTY_PRI = ['A', 'B', 'D', 'E', 'F', 'H', 'C', 'G', 'I', 'J', 'K',\
-              'M', 'N', 'O', 'P', 'Q', 'T', 'U', 'V', 'W', 'X', 'Z'] # (Optional)
-SAMPLE_RATE = 5
-ADDR_COL = "土地區段位置或建物區門牌"
-LAT_COL = "緯度"
-LON_COL = "經度"
 
 @unique
 class Deal(Enum):
@@ -67,7 +65,7 @@ class CountyCht(Enum):
     連江縣 = 'Z'
 
 
-# load geocode history
+# history related CONSTANTS and functions
 if not os.path.isfile(HISTORY_FILE):
     copyfile(BLANK_HISTORY, HISTORY_FILE)
 with open(HISTORY_FILE, "r") as stream:
@@ -103,7 +101,8 @@ def update_history():
             subpath = os.path.join(folder, csvfile)
             dealtype = file_category(subpath)
             if HISTORY["active"] == subpath or\
-                subpath in DONE or subpath in QUEUE:
+                subpath in DONE[dealtype] or\
+                subpath in QUEUE[dealtype]:
                 continue
             QUEUE[dealtype].append(subpath)
 
@@ -130,11 +129,20 @@ def next_path():
 
 @autowrite_history
 def finish_with_path():
-    finished_path = HISTORY["active"].copy()
+    finished_path = HISTORY["active"]
     HISTORY["active"] = ""
     DONE[file_category(finished_path)].append(finished_path)
 
+def csv_len(filepath):
+    with open(filepath, "r", encoding='big5', errors='ignore') as filestream:
+        for i, l in enumerate(filestream):
+            pass
+        return i
 
+# main function related CONSTANTS and functions
+ADDR_COL = "土地區段位置或建物區門牌"
+LAT_COL = u"緯度"
+LON_COL = u"經度"
 def average_geocode(rough_address):
     """ Gets the average GPS coordinates of the rough address interval """
     matches = re.findall(r"\d+~\d+", rough_address)
@@ -159,19 +167,25 @@ def average_geocode(rough_address):
 
 def main():
     while True:
+        print("Checking for untracked files...")
         update_history()
+
+        print("Start geocoding...")
         fullpath = next_path()
         while fullpath:
+            TOTAL_ROWS = csv_len(fullpath)
+            PROGRESS = ProgressBar(TOTAL_ROWS, interval=40, prefix=HISTORY["active"]+":",
+                                   suffix='Complete', decimals=2)
             # open file
-            csvinput = open(fullpath, "r")
+            csvinput = open(fullpath, "r", encoding='big5', errors='ignore')
             open(TEMPORARY_FILE, "a").close()
-            csvoutput = open(TEMPORARY_FILE, "r+")
+            csvoutput = open(TEMPORARY_FILE, "r+", encoding='big5', errors='ignore')
 
             # parse file using csv
-            READER = csv.DictReader(csvinput, encoding="big5", errors="ignore")
-            FIELDNAMES = READER.fieldnames + [LATITUDE_FIELD, LONGITUDE_FIELD]
-            SKIP = csv.DictReader(csvoutput, encoding="big5", errors="ignore")
-            WRITER = csv.DictWriter(csvoutput, FIELDNAMES, encoding="big5", errors="ignore")
+            READER = csv.DictReader(csvinput)
+            FIELDNAMES = READER.fieldnames + [LAT_COL, LON_COL]
+            SKIP = csv.DictReader(csvoutput)
+            WRITER = csv.DictWriter(csvoutput, FIELDNAMES)
 
             # skip handled rows
             if not SKIP.fieldnames:
@@ -184,6 +198,7 @@ def main():
                 cached_lat = row[LAT_COL]
                 cached_lon = row[LON_COL]
                 next(READER)
+                PROGRESS.add()
 
             # write gps result to csv file
             for row in READER:
@@ -201,17 +216,19 @@ def main():
                             row[LAT_COL] = result_gps["lat"]
                             row[LON_COL] = result_gps["lon"]
                             break
-                        except geo.AddressError as e:
-                            print(e)
+                        except geo.AddressError:
                             row[LAT_COL] = None
                             row[LON_COL] = None
                             break
-                        except geo.TryAgainLater:
+                        except Exception as e:
+                            print(e, file=sys.stderr)
                             time.sleep(10)
+                            PROGRESS.start()
                     cached_address = target_address
                     cached_lat = result_gps["lat"]
                     cached_lon = result_gps["lon"]
                 WRITER.writerow(row)
+                PROGRESS.add()
             # close file
             csvinput.close()
             csvoutput.close()
