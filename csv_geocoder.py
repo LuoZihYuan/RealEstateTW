@@ -217,22 +217,30 @@ def main():
                     row[LAT_COL] = cached_lat
                     row[LON_COL] = cached_lon
                 else:
+                    cached_exceptions = []
                     while True:
                         try:
                             result_gps = average_geocode(target_address)
+                            if cached_exceptions:
+                                print("Fixed: ", end='')
+                                for excpt in cached_exceptions:
+                                    print(excpt, end='')
+                                print("")
+                                progress_bar.start()
                             row[LAT_COL] = result_gps["lat"]
                             row[LON_COL] = result_gps["lon"]
                             break
                         except geo.AddressError as address_exception:
                             print(address_exception, file=sys.stderr)
-                            progress_bar.start()
+                            cached_exceptions.append(address_exception.__class__)
                             row[LAT_COL] = None
                             row[LON_COL] = None
                             break
                         except Exception as general_exception:
-                            print(general_exception, file=sys.stderr)
+                            if general_exception.__class__ not in cached_exceptions:
+                                print(general_exception, file=sys.stderr)
+                                cached_exceptions.append(general_exception.__class__)
                             time.sleep(10)
-                            progress_bar.start()
                     cached_address = target_address
                     cached_lat = row[LAT_COL]
                     cached_lon = row[LON_COL]
