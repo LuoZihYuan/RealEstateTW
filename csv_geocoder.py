@@ -4,10 +4,13 @@
     Geocode the addresses in CSV file
 """
 
+__all__ = ["main"]
+
 # Python Standard Library
 import os
 import re
 import csv
+import sys
 import time
 from shutil import copyfile
 from enum import Enum, unique
@@ -15,7 +18,7 @@ from enum import Enum, unique
 import geo
 import yaml
 # Dependent Module
-from settings import *
+import settings
 
 # user specified constants
 DEAL_PRI = ['A', 'B', 'C'] # (Required)
@@ -24,9 +27,9 @@ COUNTY_PRI = ['A', 'B', 'D', 'E', 'F', 'H', 'C', 'G', 'I', 'J', 'K',\
 SAMPLE_RATE = 5
 
 # shared CONSTANTS and functions for module
-HISTORY_FILE = os.path.join(__config__, "geocode_history.yaml")
-BLANK_HISTORY = os.path.join(__hidden__, "geocode_history.yaml")
-TEMPORARY_FILE = os.path.join(__resources__, ".temp.CSV")
+HISTORY_FILE = os.path.join(settings.__config__, "geocode_history.yaml")
+BLANK_HISTORY = os.path.join(settings.__hidden__, "geocode_history.yaml")
+TEMPORARY_FILE = os.path.join(settings.__resources__, ".temp.CSV")
 
 @unique
 class Deal(Enum):
@@ -42,7 +45,7 @@ def file_category(filename):
     return Deal(code).name
 
 @unique
-class CountyEng(Enum):
+class CountyAlpha(Enum):
     """ Enum for taiwan counties in english """
     Taipei_City = 'A'; Taichung_City = 'B'; Keelung_City = 'C'
     Tainan_City = 'D'; Kaohsiung_City = 'E'; New_Taipei_City = 'F'
@@ -55,14 +58,14 @@ class CountyEng(Enum):
 @unique
 class CountyCht(Enum):
     """ Enum for taiwan counties in traditional chinese """
-    臺北市 = 'A'; 臺中市 = 'B'; 基隆市 = 'C'
-    臺南市 = 'D'; 高雄市 = 'E'; 新北市 = 'F'
-    宜蘭縣 = 'G'; 桃園市 = 'H'; 嘉義市 = 'I'
-    新竹縣 = 'J'; 苗栗縣 = 'K'; 南投縣 = 'M'
-    彰化縣 = 'N'; 新竹市 = 'O'; 雲林縣 = 'P'
-    嘉義縣 = 'Q'; 屏東縣 = 'T'; 花蓮縣 = 'U'
-    臺東縣 = 'V'; 金門縣 = 'W'; 澎湖縣 = 'X'
-    連江縣 = 'Z'
+    Taipei_City = '臺北市'; Taichung_City = '臺中市'; Keelung_City = '基隆市'
+    Tainan_City = '臺南市'; Kaohsiung_City = '高雄市'; New_Taipei_City = '新北市'
+    Yilan_County = '宜蘭縣'; Taoyuan_City = '桃園市'; Chiayi_City = '嘉義市'
+    Hsinchu_County = '新竹縣'; Miaoli_County = '苗栗縣'; Nantou_County = '南投縣'
+    Changhua_County = '彰化縣'; Hsinchu_City = '新竹市'; Yunlin_County = '雲林縣'
+    Chiayi_County = '嘉義縣'; Pingtung_County = '屏東縣'; Hualien_County = '花蓮縣'
+    Taitung_County = '臺東縣'; Kinmen_County = '金門縣'; Penghu_County = '澎湖縣'
+    Lienchiang_County = '連江縣'
 
 
 # history related CONSTANTS and functions
@@ -91,8 +94,8 @@ def autowrite_history(func):
 def update_history():
     """ Add untracked files to history file """
     # XXX: Should update from config
-    for folder in os.listdir(__resources__):
-        folderpath = os.path.join(__resources__, folder)
+    for folder in os.listdir(settings.__resources__):
+        folderpath = os.path.join(settings.__resources__, folder)
         if folder.startswith('.') or not os.path.isdir(folderpath):
             continue
         for csvfile in os.listdir(folderpath):
@@ -110,7 +113,7 @@ def update_history():
 def next_path():
     """ Get next path from history """
     if HISTORY["active"]:
-        return os.path.join(__resources__, HISTORY["active"])
+        return os.path.join(settings.__resources__, HISTORY["active"])
     while DEAL_PRI:
         deal = Deal(DEAL_PRI[0]).name
         if not QUEUE[deal]:
@@ -121,23 +124,26 @@ def next_path():
                 if os.path.basename(short_path)[0] == COUNTY_PRI[0]:
                     HISTORY["active"] = short_path
                     QUEUE[deal].remove(short_path)
-                    return os.path.join(__resources__, short_path)
+                    return os.path.join(settings.__resources__, short_path)
             COUNTY_PRI.pop(0)
         HISTORY["active"] = QUEUE[deal].pop(0)
-        return os.path.join(__resources__, HISTORY["active"])
+        return os.path.join(settings.__resources__, HISTORY["active"])
     return None
 
 @autowrite_history
 def finish_with_path():
+    """ Add finished path into 'done' category of history """
     finished_path = HISTORY["active"]
     HISTORY["active"] = ""
     DONE[file_category(finished_path)].append(finished_path)
 
 def csv_len(filepath):
+    """ Count total rows of csv content """
+    csv_total = 0
     with open(filepath, "r", encoding='big5', errors='ignore') as filestream:
-        for i, l in enumerate(filestream):
-            pass
-        return i
+        for index, _ in enumerate(filestream):
+            csv_total = index
+    return csv_total
 
 # main function related CONSTANTS and functions
 ADDR_COL = "土地區段位置或建物區門牌"
@@ -163,9 +169,10 @@ def average_geocode(rough_address):
         lat_avg = sum(lat_results) / len(lat_results)
         lon_avg = sum(lon_results) / len(lon_results)
         return {"lat": lat_avg, "lon": lon_avg}
-    return {"lat": None, "lon": None}
+    raise geo.AddressError(geo.__name__, rough_address)
 
 def main():
+    """ Main Process """
     while True:
         print("Checking for untracked files...")
         update_history()
@@ -173,35 +180,35 @@ def main():
         print("Start geocoding...")
         fullpath = next_path()
         while fullpath:
-            TOTAL_ROWS = csv_len(fullpath)
-            PROGRESS = ProgressBar(TOTAL_ROWS, interval=40, prefix=HISTORY["active"]+":",
-                                   suffix='Complete', decimals=2)
+            total_rows = csv_len(fullpath)
+            progress_bar = settings.ProgressBar(total_rows, interval=40, decimals=2,
+                                                prefix=HISTORY["active"]+":", suffix='Complete')
             # open file
             csvinput = open(fullpath, "r", encoding='big5', errors='ignore')
             open(TEMPORARY_FILE, "a").close()
             csvoutput = open(TEMPORARY_FILE, "r+", encoding='big5', errors='ignore')
 
             # parse file using csv
-            READER = csv.DictReader(csvinput)
-            FIELDNAMES = READER.fieldnames + [LAT_COL, LON_COL]
-            SKIP = csv.DictReader(csvoutput)
-            WRITER = csv.DictWriter(csvoutput, FIELDNAMES)
+            reader = csv.DictReader(csvinput)
+            fieldnames = reader.fieldnames + [LAT_COL, LON_COL]
+            skip = csv.DictReader(csvoutput)
+            writer = csv.DictWriter(csvoutput, fieldnames)
 
             # skip handled rows
-            if not SKIP.fieldnames:
-                WRITER.writeheader()
+            if not skip.fieldnames:
+                writer.writeheader()
             cached_address = ""
             cached_lat = None
             cached_lon = None
-            for row in SKIP:
+            for row in skip:
                 cached_address = row[ADDR_COL]
                 cached_lat = row[LAT_COL]
                 cached_lon = row[LON_COL]
-                next(READER)
-                PROGRESS.add()
+                next(reader)
+                progress_bar.add()
 
             # write gps result to csv file
-            for row in READER:
+            for row in reader:
                 target_address = row[ADDR_COL]
                 if "地號" in target_address:
                     row[LAT_COL] = None
@@ -216,19 +223,21 @@ def main():
                             row[LAT_COL] = result_gps["lat"]
                             row[LON_COL] = result_gps["lon"]
                             break
-                        except geo.AddressError:
+                        except geo.AddressError as address_exception:
+                            print(address_exception, file=sys.stderr)
+                            progress_bar.start()
                             row[LAT_COL] = None
                             row[LON_COL] = None
                             break
-                        except Exception as e:
-                            print(e, file=sys.stderr)
+                        except Exception as general_exception:
+                            print(general_exception, file=sys.stderr)
                             time.sleep(10)
-                            PROGRESS.start()
+                            progress_bar.start()
                     cached_address = target_address
-                    cached_lat = result_gps["lat"]
-                    cached_lon = result_gps["lon"]
-                WRITER.writerow(row)
-                PROGRESS.add()
+                    cached_lat = row[LAT_COL]
+                    cached_lon = row[LON_COL]
+                writer.writerow(row)
+                progress_bar.add()
             # close file
             csvinput.close()
             csvoutput.close()
@@ -236,8 +245,7 @@ def main():
             os.remove(TEMPORARY_FILE)
             finish_with_path()
             fullpath = next_path()
-        else:
-            time.sleep(60)
+        time.sleep(60)
 
 if __name__ == "__main__":
     main()

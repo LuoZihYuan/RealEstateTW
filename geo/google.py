@@ -1,6 +1,7 @@
 """ Manages geo service provided by Google """
 
 # Python Standard Library
+import os
 import json
 import datetime
 # Third Party Library
@@ -47,6 +48,7 @@ class Google(Provider):
                 return True
         return False
 
+    @provider_config_update
     def geocode(self, address, **kwargs):
         super(Google, self).geocode(address, **kwargs)
 
@@ -75,4 +77,4 @@ class Google(Provider):
         if status != "ZERO_RESULTS":
             location = response["results"][0]["geometry"]["location"]
             return {"lat": location["lat"], "lon": location["lng"]}
-        return None
+        return {"lat": None, "lon": None}

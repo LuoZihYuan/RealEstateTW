@@ -83,4 +83,4 @@ class Bing(Provider):
         if response["resourceSets"][0]["estimatedTotal"] != 0:
             coordinates = response["resourceSets"][0]["resources"][0]["point"]["coordinates"].copy()
             return {"lat": coordinates[0], "lon": coordinates[1]}
-        return None
+        return {"lat": None, "lon": None}
