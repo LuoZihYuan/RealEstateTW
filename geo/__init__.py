@@ -24,7 +24,8 @@ if sys.version_info < (3, 0):
 
 class TryAgainLater(Exception):
     """ Retry later might solve the current problem """
-    pass
+    def __str__(self):
+        return self.__class__.__name__
 
 PRIORITY_NAME = "priority.yaml"
 
@@ -69,9 +70,9 @@ def geocode(address, provider=None, **kwargs):
     banned_symbol = "&#"
     for symbol in banned_symbol:
         if symbol in address:
-            raise AddressError(Provider.__class__.__name__, address)
+            raise AddressError(__name__, address)
 
-    # doesn't handle exception if provider is specified
+    # won't handle exception if provider is specified
     if provider and issubclass(provider, Provider):
         return {"provider": provider.__class__.__name__,
                 "GPS": provider.geocode(address, **kwargs)}
@@ -84,15 +85,17 @@ def geocode(address, provider=None, **kwargs):
                 return {"provider": instance.__class__.__name__,
                         "GPS": instance.geocode(address, **kwargs)}
             except (ProviderOutOfAPIKeys, ProviderServerError, AddressError, CultureError) as error:
-                error_log.append(error)
+                error_log.append(error.__class__.__name__)
                 continue
+        else:
+            error_log.append(ProviderOutOfAPIKeys.__name__)
 
     # check if address isn't recognized by any providers
     for error in error_log:
-        if not isinstance(error, AddressError):
+        if error != AddressError.__name__:
             break
     else:
-        raise AddressError(Provider.__class__.__name__, address)
+        raise AddressError(__name__, address)
     raise TryAgainLater
 
 # def reverse_geocode(latitude, longitude):

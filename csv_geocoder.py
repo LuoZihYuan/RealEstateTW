@@ -232,14 +232,14 @@ def main():
                             break
                         except geo.AddressError as address_exception:
                             print(address_exception, file=sys.stderr)
-                            cached_exceptions.append(address_exception.__class__)
+                            cached_exceptions.append(address_exception.__class__.__name__)
                             row[LAT_COL] = None
                             row[LON_COL] = None
                             break
                         except Exception as general_exception:
-                            if general_exception.__class__ not in cached_exceptions:
+                            if general_exception.__class__.__name__ not in cached_exceptions:
                                 print(general_exception, file=sys.stderr)
-                                cached_exceptions.append(general_exception.__class__)
+                                cached_exceptions.append(general_exception.__class__.__name__)
                             time.sleep(10)
                     cached_address = target_address
                     cached_lat = row[LAT_COL]
