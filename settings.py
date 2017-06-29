@@ -9,6 +9,15 @@ __config__ = os.path.abspath(os.path.join(__file__, os.pardir, "config"))
 __hidden__ = os.path.abspath(os.path.join(__file__, os.pardir, ".RealEstate"))
 __resources__ = os.path.abspath(os.path.join(__file__, os.pardir, "resources"))
 
+def format_bytes(byte: int) -> str:
+    """ Format byte into different magnitude strings """
+    units = ["byte", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"]
+    for unit in units[:-1]:
+        if abs(byte) < 1024.0:
+            return "%3.1f %s" %(byte, unit)
+        byte /= 1024.0
+    return "%.1f %s" %(byte, units[-1])
+
 def print_progress_bar(iteration, total, prefix='', suffix='', decimals=1,
                        length=50, fill='█', overtype=True):
     """
