@@ -176,15 +176,39 @@ def parse_csv(rdr: csv.DictReader, c: sqlite3.Cursor, prefix: str, county: str):
         exist_row(row, "建物型態")
         exist_row(row, "主要用途")
         exist_row(row, "主要建材")
-        c.execute('''INSERT INTO "{0}/BUILD"
-                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''.format(prefix),
-                  (row["編號"], floor(row["總樓層數"]), num_str if num_str else None, 0, 0, 0, " ", 0, 0, 0, 0, 0, 0))
+        c.execute('''INSERT INTO "{0}/BUILD" VALUES (
+                         ?, ?, ?, (
+                             SELECT id FROM 建物型態 WHERE type == ?
+                         ), (
+                             SELECT id FROM 主要用途 WHERE type == ?
+                         ), (
+                             SELECT id FROM 主要建材 WHERE type == ?
+                         ), ?, ?, ?, ?, ?, ?, ?);'''.format(prefix),
+                  (row["編號"], floor(row["總樓層數"]), num_str if num_str else None, row["建物型態"],
+                   row["主要用途"], row["主要建材"], row["建築完成年月"], row["建物移轉總面積平方公尺"],
+                   True if row["建物現況格局-隔間"] == "有" else False, row["建物現況格局-房"], row["建物現況格局-廳"],
+                   row["建物現況格局-衛"], True if row["有無管理組織"] == "有" else False))
 
         exist_row(row, "都市土地使用分區")
         exist_row(row, "非都市土地使用分區")
         exist_row(row, "非都市土地使用編定")
+        c.execute('''INSERT INTO "{0}/LAND" VALUES (
+                         ?, ?, (
+                             SELECT id FROM 都市土地使用分區 WHERE type == ?
+                         ), (
+                             SELECT id FROM 非都市土地使用分區 WHERE type == ?
+                         ), (
+                             SELECT id FROM 非都市土地使用編定 WHERE type == ?
+                         ));'''.format(prefix),
+                  (row["編號"], row["土地移轉總面積平方公尺"], row["都市土地使用分區"], row["非都市土地使用分區"],
+                   row["非都市土地使用編定"]))
 
         exist_row(row, "車位類別")
+        c.execute('''INSERT INTO "{0}/PARK" VALUES (
+                             ?, (
+                                 SELECT id FROM 車位類別 WHERE type == ?
+                             ), ?, ?);'''.format(prefix),
+                  (row["編號"], row["車位類別"], row["車位移轉總面積平方公尺"], row["車位總價元"]))
 
 def main():
     """ Main Process """
