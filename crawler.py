@@ -5,7 +5,6 @@
 # Standard Python Library
 import os
 import re
-import sys
 import errno
 from io import BytesIO
 from zipfile import ZipFile
@@ -13,14 +12,8 @@ from multiprocessing.dummy import Lock as ThreadLock
 from multiprocessing.dummy import Pool as ThreadPool
 # Third Party Library
 import requests
+import settings
 from bs4 import BeautifulSoup
-
-#version check
-if sys.version_info < (3, 0):
-    raise EnvironmentError("python3 required")
-else:
-    # Dependent Module
-    import settings
 
 HISTORY_LIST_URL = "http://plvr.land.moi.gov.tw/DownloadHistory_ajax_list"
 def update_check():

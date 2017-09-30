@@ -39,33 +39,10 @@ class Deal(Enum):
     rent = 'C'
     def __str__(self):
         return self.value
-def file_category(filename):
+def file_category(filename: str) -> str:
     """ Classify CSV file by file name """
     code = os.path.splitext(filename)[0][-1]
     return Deal(code).name
-
-@unique
-class CountyAlpha(Enum):
-    """ Enum for taiwan counties in english """
-    Taipei_City = 'A'; Taichung_City = 'B'; Keelung_City = 'C'
-    Tainan_City = 'D'; Kaohsiung_City = 'E'; New_Taipei_City = 'F'
-    Yilan_County = 'G'; Taoyuan_City = 'H'; Chiayi_City = 'I'
-    Hsinchu_County = 'J'; Miaoli_County = 'K'; Nantou_County = 'M'
-    Changhua_County = 'N'; Hsinchu_City = 'O'; Yunlin_County = 'P'
-    Chiayi_County = 'Q'; Pingtung_County = 'T'; Hualien_County = 'U'
-    Taitung_County = 'V'; Kinmen_County = 'W'; Penghu_County = 'X'
-    Lienchiang_County = 'Z'
-@unique
-class CountyCht(Enum):
-    """ Enum for taiwan counties in traditional chinese """
-    Taipei_City = '臺北市'; Taichung_City = '臺中市'; Keelung_City = '基隆市'
-    Tainan_City = '臺南市'; Kaohsiung_City = '高雄市'; New_Taipei_City = '新北市'
-    Yilan_County = '宜蘭縣'; Taoyuan_City = '桃園市'; Chiayi_City = '嘉義市'
-    Hsinchu_County = '新竹縣'; Miaoli_County = '苗栗縣'; Nantou_County = '南投縣'
-    Changhua_County = '彰化縣'; Hsinchu_City = '新竹市'; Yunlin_County = '雲林縣'
-    Chiayi_County = '嘉義縣'; Pingtung_County = '屏東縣'; Hualien_County = '花蓮縣'
-    Taitung_County = '臺東縣'; Kinmen_County = '金門縣'; Penghu_County = '澎湖縣'
-    Lienchiang_County = '連江縣'
 
 
 # history related CONSTANTS and functions
@@ -137,7 +114,7 @@ def finish_with_path():
     HISTORY["active"] = ""
     DONE[file_category(finished_path)].append(finished_path)
 
-def csv_len(filepath):
+def csv_len(filepath: str) -> int:
     """ Count total rows of csv content """
     csv_total = 0
     with open(filepath, "r", encoding='big5', errors='ignore') as filestream:
