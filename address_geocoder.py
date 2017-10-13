@@ -1,6 +1,6 @@
 #pylint: disable=C0321
 """
-    Geocode the addresses in CSV file
+    Geocode addresses in the database
 """
 
 __all__ = ["main"]
