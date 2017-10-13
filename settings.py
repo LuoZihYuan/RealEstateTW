@@ -13,6 +13,16 @@ __all__ = ["__config__", "__hidden__", "__resources__", "print_progress_bar", "P
 __config__ = os.path.abspath(os.path.join(__file__, os.pardir, "config"))
 __hidden__ = os.path.abspath(os.path.join(__file__, os.pardir, ".RealEstate"))
 __resources__ = os.path.abspath(os.path.join(__file__, os.pardir, "resources"))
+__main_db__ = os.path.abspath(os.path.join(__resources__, "main.db"))
+
+@unique
+class Deal(Enum):
+    """ Enum for transaction type """
+    sold = 'A'
+    presold = 'B'
+    rent = 'C'
+    def __str__(self):
+        return self.value
 
 @unique
 class CountyAlpha(Enum):
@@ -36,6 +46,16 @@ class CountyCht(Enum):
     Chiayi_County = '嘉義縣'; Pingtung_County = '屏東縣'; Hualien_County = '花蓮縣'
     Taitung_County = '臺東縣'; Kinmen_County = '金門縣'; Penghu_County = '澎湖縣'
     Lienchiang_County = '連江縣'
+
+def alpha2cht(alphabet: str) -> str:
+    cnty_en = CountyAlpha(alphabet).name
+    cnty_cht = CountyCht[cnty_en].value
+    return cnty_cht
+
+def cht2alpha(chinese: str) -> str:
+    cnty_cht = CountyCht(chinese).name
+    cnty_en = CountyAlpha[cnty_cht].value
+    return cnty_en
 
 def format_bytes(byte: int) -> str:
     """ Format byte into different magnitude strings """

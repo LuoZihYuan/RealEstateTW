@@ -1,12 +1,17 @@
-""" create sqlite3 database from csv file """
+#pylint: disable=C0321
+"""
+    create sqlite3 database from csv file
+"""
+
+# Standard Library
 import os
 import csv
 import pprint
 import sqlite3
+# Dependent Module
 import settings
 
 __version__ = "0.1"
-DATABASE_PATH = os.path.join(settings.__resources__, "registration.db")
 IMPORTED_FOLDERS = "IMPORTED_FOLDERS"
 
 FLOOR_CHT = ["", "一", "二", "三", "四", "五", "六", "七", "八", "九"]
@@ -15,7 +20,7 @@ def floor(txt: str) -> int:
     underground = True if txt[:2] == "地下" else False
     target = txt[2:-1] if underground else txt [:-1]
     units = target.split(sep="十")
-    total = 0; exp = 1
+    total = 0; exp = 1  # init local variable
     for unit in units[::-1]:
         if not unit and exp != 1:
             digit = 1
@@ -33,11 +38,14 @@ def floor_all(lst: list) -> list:
     numerals = [floor(txt) for txt in lst if floor(txt)]
     return sorted(numerals)
 
-def init_DB(c: sqlite3.Cursor) -> str:
+def init_db(c: sqlite3.Cursor) -> str:
     """ initialize database with essential data tables """
     c.execute('''CREATE TABLE IF NOT EXISTS {0}(
                      quarter TEXT PRIMARY KEY,
-                     createdAt TEXT NOT NULL
+                     createdAt TEXT NOT NULL,
+                     geocode_log INTEGER DEFAULT 0 CHECK(
+                         geocode_log >= 0 AND geocode_log <= 67108863
+                     )
                  );'''.format(IMPORTED_FOLDERS))
     c.execute('''CREATE TABLE IF NOT EXISTS 建物型態(
                      id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -91,12 +99,18 @@ def create_table(c: sqlite3.Cursor, prefix: str):
                  );'''.format(prefix))
     c.execute('''CREATE TABLE "{0}/GEO"(
                      編號 TEXT PRIMARY KEY,
-                     GEO_1 REAL NOT NULL,
-                     GEO_2 REAL NOT NULL,
-                     GEO_3 REAL NOT NULL,
-                     GEO_4 REAL NOT NULL,
-                     GEO_5 REAL NOT NULL,
-                     GEO_Avg REAL NOT NULL,
+                     LAT_1 REAL NOT NULL,
+                     LON_1 REAL NOT NULL,
+                     LAT_2 REAL NOT NULL,
+                     LON_2 REAL NOT NULL,
+                     LAT_3 REAL NOT NULL,
+                     LON_3 REAL NOT NULL,
+                     LAT_4 REAL NOT NULL,
+                     LON_4 REAL NOT NULL,
+                     LAT_5 REAL NOT NULL,
+                     LON_5 REAL NOT NULL,
+                     LAT_Avg REAL NOT NULL,
+                     LON_Avg REAL NOT NULL,
                      FOREIGN KEY(編號) REFERENCES "{0}/TRX"(編號)
                  );'''.format(prefix))
     c.execute('''CREATE TABLE "{0}/BUILD"(
@@ -149,8 +163,9 @@ def parse_csv(rdr: csv.DictReader, c: sqlite3.Cursor, prefix: str, county: str):
         elif row["鄉鎮市區"] == "金fa4b鄉":
             row["鄉鎮市區"] = "金峰鄉"
         try:
-            c.execute('''INSERT INTO "{0}/TRX"
-                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);'''.format(prefix),
+            c.execute('''INSERT INTO "{0}/TRX" VALUES (
+                             ?, ?, ?, ?, ?, ?, ?, ?, ?
+                         );'''.format(prefix),
                       (row["編號"], county, row["鄉鎮市區"], row["土地區段位置或建物區門牌"],
                        row["交易年月日"], row["總價元"], row["單價每平方公尺"],
                        True if ("親" in row["備註"]) or ("友" in row["備註"]) else False,
@@ -183,7 +198,8 @@ def parse_csv(rdr: csv.DictReader, c: sqlite3.Cursor, prefix: str, county: str):
                              SELECT id FROM 主要用途 WHERE type == ?
                          ), (
                              SELECT id FROM 主要建材 WHERE type == ?
-                         ), ?, ?, ?, ?, ?, ?, ?);'''.format(prefix),
+                         ), ?, ?, ?, ?, ?, ?, ?
+                     );'''.format(prefix),
                   (row["編號"], floor(row["總樓層數"]), num_str if num_str else None, row["建物型態"],
                    row["主要用途"], row["主要建材"], row["建築完成年月"], row["建物移轉總面積平方公尺"],
                    True if row["建物現況格局-隔間"] == "有" else False, row["建物現況格局-房"], row["建物現況格局-廳"],
@@ -199,22 +215,24 @@ def parse_csv(rdr: csv.DictReader, c: sqlite3.Cursor, prefix: str, county: str):
                              SELECT id FROM 非都市土地使用分區 WHERE type == ?
                          ), (
                              SELECT id FROM 非都市土地使用編定 WHERE type == ?
-                         ));'''.format(prefix),
+                         )
+                     );'''.format(prefix),
                   (row["編號"], row["土地移轉總面積平方公尺"], row["都市土地使用分區"], row["非都市土地使用分區"],
                    row["非都市土地使用編定"]))
 
         exist_row(row, "車位類別")
         c.execute('''INSERT INTO "{0}/PARK" VALUES (
-                             ?, (
-                                 SELECT id FROM 車位類別 WHERE type == ?
-                             ), ?, ?);'''.format(prefix),
+                         ?, (
+                             SELECT id FROM 車位類別 WHERE type == ?
+                         ), ?, ?
+                     );'''.format(prefix),
                   (row["編號"], row["車位類別"], row["車位移轉總面積平方公尺"], row["車位總價元"]))
 
 def main():
     """ Main Process """
-    con = sqlite3.connect(DATABASE_PATH)
+    con = sqlite3.connect(settings.__main_db__)
     cur = con.cursor()
-    table_names = init_DB(cur)
+    table_names = init_db(cur)
 
     folder_names = next(os.walk(settings.__resources__))[1]
     for folder_name in folder_names:
@@ -232,12 +250,14 @@ def main():
             file_path = os.path.join(folder_path, file_name)
             with open(file_path, 'r', encoding='big5', errors='ignore') as fstream:
                 reader = csv.DictReader(fstream)
-                cnty_en = settings.CountyAlpha(root[0]).name
-                cnty_cht = settings.CountyCht[cnty_en].value
+                cnty_cht = settings.alpha2cht(root[0])
                 parse_csv(reader, cur, folder_name, cnty_cht)
-        cur.execute("INSERT INTO {0} VALUES(?, CURRENT_TIMESTAMP)".format(IMPORTED_FOLDERS),
+        cur.execute('''INSERT INTO {0}(quarter, createdAt) VALUES (
+                           ?, CURRENT_TIMESTAMP
+                       );'''.format(IMPORTED_FOLDERS),
                     (folder_name,))
         cur.execute("COMMIT;")
+    con.close()
 
 if __name__ == "__main__":
     main()
