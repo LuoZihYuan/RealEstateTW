@@ -15,6 +15,8 @@ __hidden__ = os.path.abspath(os.path.join(__file__, os.pardir, ".RealEstate"))
 __resources__ = os.path.abspath(os.path.join(__file__, os.pardir, "resources"))
 __main_db__ = os.path.abspath(os.path.join(__resources__, "main.db"))
 
+GEO_SAMPLES = 5
+
 @unique
 class Deal(Enum):
     """ Enum for transaction type """

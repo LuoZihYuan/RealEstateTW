@@ -43,7 +43,7 @@ def init_db(c: sqlite3.Cursor) -> str:
     c.execute('''CREATE TABLE IF NOT EXISTS {0}(
                      quarter TEXT PRIMARY KEY,
                      createdAt TEXT NOT NULL,
-                     geocode_log INTEGER DEFAULT 0 CHECK(
+                     geocode_log INTEGER NOT NULL DEFAULT 0 CHECK(
                          geocode_log >= 0 AND geocode_log <= 67108863
                      )
                  );'''.format(IMPORTED_FOLDERS))
@@ -99,18 +99,12 @@ def create_table(c: sqlite3.Cursor, prefix: str):
                  );'''.format(prefix))
     c.execute('''CREATE TABLE "{0}/GEO"(
                      編號 TEXT PRIMARY KEY,
-                     LAT_1 REAL NOT NULL,
-                     LON_1 REAL NOT NULL,
-                     LAT_2 REAL NOT NULL,
-                     LON_2 REAL NOT NULL,
-                     LAT_3 REAL NOT NULL,
-                     LON_3 REAL NOT NULL,
-                     LAT_4 REAL NOT NULL,
-                     LON_4 REAL NOT NULL,
-                     LAT_5 REAL NOT NULL,
-                     LON_5 REAL NOT NULL,
-                     LAT_Avg REAL NOT NULL,
-                     LON_Avg REAL NOT NULL,
+                     LAT_1 REAL, LON_1 REAL,
+                     LAT_2 REAL, LON_2 REAL,
+                     LAT_3 REAL, LON_3 REAL,
+                     LAT_4 REAL, LON_4 REAL,
+                     LAT_5 REAL, LON_5 REAL,
+                     LAT_Avg REAL, LON_Avg REAL,
                      FOREIGN KEY(編號) REFERENCES "{0}/TRX"(編號)
                  );'''.format(prefix))
     c.execute('''CREATE TABLE "{0}/BUILD"(
@@ -175,6 +169,8 @@ def parse_csv(rdr: csv.DictReader, c: sqlite3.Cursor, prefix: str, county: str):
             raise
         numbers = floor_all([f for f in row["移轉層次"].split(sep="，") if f and f[-1] == "層"])
         num_str = ", ".join(str(number) for number in numbers)
+
+        c.execute('''INSERT INTO "{0}/GEO"(編號) VALUES (?);'''.format(prefix), (row["編號"],))
 
         def exist_row(picked_row: csv.OrderedDict, fieldname: str):
             """ insert new type into specified table or increase count when already exists """
