@@ -64,7 +64,7 @@ for key in PROVIDERS:
 #     if key not in PRIORITY["reverse_geocode"]:
 #         REVERSE_GEOCODE_INSTANCES.append(providers[key])
 
-def geocode(address, provider=None, **kwargs):
+def geocode(address: str, provider:Provider=None, **kwargs):
     """ Integrate geocode service of each provider """
     # check if garbled letters exist in address
     banned_symbol = "&#"

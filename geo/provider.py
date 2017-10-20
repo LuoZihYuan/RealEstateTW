@@ -78,7 +78,7 @@ class Provider(object):
             raise TypeError("Class 'Provider' should not be directly instantiated.")
         return super(Provider, cls).__new__(cls, *args, **kwargs)
 
-    def __init__(self, filepath, showPrompt=True):
+    def __init__(self, filepath: str, showPrompt:bool=True):
         # load in configuration file for corresponding geo service providers
         filename = os.path.basename(filepath)
         self.__yaml__ = os.path.join(__config__, filename.replace(".py", ".yaml"))
@@ -107,7 +107,7 @@ class Provider(object):
         pass
 
     @abc.abstractmethod
-    def geocode(self, address, **kwargs):
+    def geocode(self, address: str, **kwargs):
         """
             Get GPS coordinates by geographical address.
             Method specified by each subclass.
@@ -124,7 +124,7 @@ class Provider(object):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def reverse_geocode(self, latitude, longitude):
+    def reverse_geocode(self, latitude: float, longitude: float):
         """
             Get geographical address by GPS coordinates.
             Method specified by each subclass.

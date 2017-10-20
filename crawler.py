@@ -30,7 +30,7 @@ def update_check():
 
 SHARED_LOCK = ThreadLock()
 DOWNLOAD_BASE_URL = "http://plvr.land.moi.gov.tw/DownloadHistory?type=season&fileName={}"
-def downloader(season):
+def downloader(season: str):
     """ Download files and extract to resources folder """
     url = DOWNLOAD_BASE_URL.format(season)
     http_header = requests.head(url).headers

@@ -49,7 +49,7 @@ class Google(Provider):
         return False
 
     @provider_config_update
-    def geocode(self, address, **kwargs):
+    def geocode(self, address: str, **kwargs):
         super(Google, self).geocode(address, **kwargs)
 
         # attempt to geocode until no keys are available

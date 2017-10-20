@@ -48,7 +48,7 @@ class Bing(Provider):
         return False
 
     @provider_config_update
-    def geocode(self, address, **kwargs):
+    def geocode(self, address: str, **kwargs):
         super(Bing, self).geocode(address, **kwargs)
 
         # check for parameter errors
