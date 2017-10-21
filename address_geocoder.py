@@ -106,7 +106,8 @@ if __name__ == "__main__":
         try:
             main()
         except Exception as e:
-            print("Caught exception: \n%s"%(e), file=sys.stderr)
-            print("Restart in %d seconds...")
+            print("\nCaught exception: \n%s\n" %(e), file=sys.stderr)
+            print("Restart in %d seconds..." %(SERVER_RESTART_INTERVAL), end='', flush=True)
             time.sleep(SERVER_RESTART_INTERVAL)
+            print()
     main()
