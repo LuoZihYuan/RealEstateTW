@@ -3,7 +3,7 @@
 # Python Standard Library
 import os
 import json
-import datetime
+from datetime import datetime
 # Third Party Library
 import yaml
 import requests
@@ -24,12 +24,6 @@ class Bing(Provider):
         self.config_geocode = self.config["service"]["geocode"]
         # self.config_reverse_geocode = self.config["service"]["reverse_geocode"]
 
-        # preparation for geocode method
-        self.geocode_keys = []
-        for api_key in self.config_geocode["api_keys"]:
-            if api_key["key"] and not api_key["expired"]:
-                self.geocode_keys.append(api_key)
-
         # preparation for reverse geocode method
         # self.reverse_geocode_keys = []
         # for api_key in self.config_reverse_geocode["api_keys"]:
@@ -44,6 +38,9 @@ class Bing(Provider):
             config = yaml.load(stream)
         for api_key in config["service"]["geocode"]["api_keys"]:
             if not api_key["expired"]:
+                return True
+            elapsed_time = datetime.now() - api_key["expired_time"]
+            if elapsed_time.days > 0:
                 return True
         return False
 
@@ -61,22 +58,29 @@ class Bing(Provider):
         # attempt to geocode until no keys are available
         query_path = self.config_geocode["api_path"].replace(str(Placeholder.CULTURE), culture)
         query_path = query_path.replace(str(Placeholder.ADDRESS), address)
-        while self.geocode_keys:
-            full_path = query_path.replace(str(Placeholder.API_KEY), self.geocode_keys[0]["key"])
+        for api_key in self.config_geocode["api_keys"]:
+            if api_key["expired"]:
+                elapsed_time = datetime.now() - api_key["expired_time"]
+                if elapsed_time.days <= 0:
+                    continue
+            full_path = query_path.replace(str(Placeholder.API_KEY), api_key["key"])
             response = json.loads(requests.get(full_path).text)
-            if response["statusCode"] != 401 and response["statusCode"] != 403:
+            statusCode = response["statusCode"]
+            if statusCode != 401 and statusCode != 403:
+                api_key["expired"] = False
+                api_key["expired_time"] = None
                 break
-            expired_key = self.geocode_keys.pop(0)
-            expired_key["expired"] = True
-            expired_key["expired_time"] = datetime.datetime.now()
+            if not api_key["expired"]:
+                api_key["expired"] = True
+                api_key["expired_time"] = datetime.now()
         else:
             open_file(self.__yaml__)
             raise ProviderOutOfAPIKeys(self.__class__.__name__)
 
         # deal with possible error status code
-        if response["statusCode"] == 400:
+        if statusCode == 400:
             raise AddressError(self.__class__.__name__, address)
-        elif response["statusCode"] == 500 or response["statusCode"] == 503:
+        elif statusCode == 500 or statusCode == 503:
             raise ProviderServerError(self.__class__.__name__)
 
         # return result of geocode
