@@ -6,7 +6,10 @@
 __all__ = ["main"]
 
 # Python Standard Library
+import os
 import re
+import sys
+import time
 import sqlite3
 # Third Party Library
 import geo
@@ -50,6 +53,7 @@ def partition_geocode(c: sqlite3.Cursor, quarter: str, county_cht: str):
         identities = c.fetchall()
         if not identities:
             continue
+        print("[%d] "%(len(identities)) + address)
         results = selective_geocode(address)
         results["lat"].append(sum(results["lat"]) / len(results["lat"]))
         results["lon"].append(sum(results["lat"]) / len(results["lat"]))
@@ -76,7 +80,7 @@ def main():
                     (bitmask, bitmask))
         quarters = [result[0] for result in cur.fetchall()]
         for quarter in quarters:
-            print(quarter, county_cht)
+            print("\n%s %s" %(quarter, county_cht))
             partition_geocode(cur, quarter, county_cht)
             cur.execute('''UPDATE {0} SET geocode_log = (geocode_log | ?)
                            WHERE quarter = ?;'''.format(IMPORTED_FOLDERS),
@@ -85,4 +89,24 @@ def main():
     con.close()
 
 if __name__ == "__main__":
+    # clear terminal output
+    if sys.platform.startswith("darwin"):
+        os.system('clear')
+    elif sys.platform.startswith("linux"):
+        os.system('clear')
+    elif sys.platform.startswith("win"):
+        os.system('cls')
+
+    # toggle between server and normal mode
+    SERVER_RESTART_INTERVAL = 3600
+    print("    Activating server mode causes geocoding process to automatically restart when")
+    print("exception is encountered.\n")
+    SERVER_MODE = True if (input("Activate server mode? [y/n]: ").lower() == "y") else False
+    while SERVER_MODE:
+        try:
+            main()
+        except Exception as e:
+            print("Caught exception: \n%s"%(e), file=sys.stderr)
+            print("Restart in %d seconds...")
+            time.sleep(SERVER_RESTART_INTERVAL)
     main()
