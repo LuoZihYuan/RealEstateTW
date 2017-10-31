@@ -39,18 +39,18 @@ def selective_geocode(rough_address: str) -> dict:
         return {"lat": lat_results, "lon": lon_results}
     raise geo.AddressError(geo.__name__, rough_address)
 
-def partition_geocode(c: sqlite3.Cursor, quarter: str, county_cht: str):
+def partition_geocode(con: sqlite3.Connection, cur: sqlite3.Cursor, quarter: str, county_cht: str):
     """ Geocode address of the same county in quarter fashion """
-    c.execute('''SELECT 土地區段位置或建物區門牌 FROM "{0}/TRX"
-                 WHERE 縣市 = ?
-                 GROUP BY 土地區段位置或建物區門牌;'''.format(quarter), (county_cht,))
-    for address, in c.fetchall():
-        c.execute('''SELECT GEO.編號
-                     FROM "{0}/TRX" AS TRX, "{0}/GEO" AS GEO
-                     WHERE TRX.編號 = GEO.編號
-                     AND TRX.土地區段位置或建物區門牌 = ?
-                     AND GEO.LAT_Avg ISNULL;'''.format(quarter), (address,))
-        identities = c.fetchall()
+    cur.execute('''SELECT 土地區段位置或建物區門牌 FROM "{0}/TRX"
+                   WHERE 縣市 = ?
+                   GROUP BY 土地區段位置或建物區門牌;'''.format(quarter), (county_cht,))
+    for address, in cur.fetchall():
+        cur.execute('''SELECT GEO.編號
+                       FROM "{0}/TRX" AS TRX, "{0}/GEO" AS GEO
+                       WHERE TRX.編號 = GEO.編號
+                       AND TRX.土地區段位置或建物區門牌 = ?
+                       AND GEO.LAT_Avg ISNULL;'''.format(quarter), (address,))
+        identities = cur.fetchall()
         if not identities:
             continue
         print("[%d] "%(len(identities)) + address)
@@ -59,34 +59,35 @@ def partition_geocode(c: sqlite3.Cursor, quarter: str, county_cht: str):
         results["lon"].append(sum(results["lat"]) / len(results["lat"]))
         combined = [num for zipped in zip(results["lat"], results["lon"]) for num in zipped]
         values = [(tuple(combined) + identity) for identity in identities]
-        c.executemany('''UPDATE "{0}/GEO" SET
-                             LAT_1 = ?, LON_1 = ?,
-                             LAT_2 = ?, LON_2 = ?,
-                             LAT_3 = ?, LON_3 = ?,
-                             LAT_4 = ?, LON_4 = ?,
-                             LAT_5 = ?, LON_5 = ?,
-                             LAT_Avg = ?, LON_Avg = ?
-                         WHERE 編號 = ?;'''.format(quarter), values)
-        c.execute("COMMIT;")
+        cur.executemany('''UPDATE "{0}/GEO" SET
+                               LAT_1 = ?, LON_1 = ?,
+                               LAT_2 = ?, LON_2 = ?,
+                               LAT_3 = ?, LON_3 = ?,
+                               LAT_4 = ?, LON_4 = ?,
+                               LAT_5 = ?, LON_5 = ?,
+                               LAT_Avg = ?, LON_Avg = ?
+                           WHERE 編號 = ?;'''.format(quarter), values)
+        con.commit()
 
 def main():
     """ Main Process """
-    con = sqlite3.connect(settings.__main_db__)
-    cur = con.cursor()
+    connection = sqlite3.connect(settings.__main_db__)
+    cursor = connection.cursor()
     for prefix in COUNTY_PRI:
         county_cht = settings.alpha2cht(prefix)
         bitmask = 1 << (ord(prefix) - 65)
-        cur.execute("SELECT quarter FROM {0} WHERE (geocode_log & ?) != ?".format(IMPORTED_FOLDERS),
-                    (bitmask, bitmask))
-        quarters = [result[0] for result in cur.fetchall()]
+        cursor.execute('''SELECT quarter FROM {0}
+                          WHERE (geocode_log & ?) != ?'''.format(IMPORTED_FOLDERS),
+                       (bitmask, bitmask))
+        quarters = [result[0] for result in cursor.fetchall()]
         for quarter in quarters:
             print("\n%s %s" %(quarter, county_cht))
-            partition_geocode(cur, quarter, county_cht)
-            cur.execute('''UPDATE {0} SET geocode_log = (geocode_log | ?)
-                           WHERE quarter = ?;'''.format(IMPORTED_FOLDERS),
-                        (bitmask, quarter))
-            con.commit()
-    con.close()
+            partition_geocode(connection, cursor, quarter, county_cht)
+            cursor.execute('''UPDATE {0} SET geocode_log = (geocode_log | ?)
+                              WHERE quarter = ?;'''.format(IMPORTED_FOLDERS),
+                           (bitmask, quarter))
+            connection.commit()
+    connection.close()
 
 if __name__ == "__main__":
     # clear terminal output
