@@ -36,7 +36,7 @@ try:
     with open(__priority__, "r") as stream:
         PRIORITY = yaml.load(stream)
 except:
-    DEFAULT_PRIORITY = os.path.join(__default__ + PRIORITY_NAME)
+    DEFAULT_PRIORITY = os.path.join(__default__, PRIORITY_NAME)
     copyfile(DEFAULT_PRIORITY, __priority__)
     open_file(__priority__)
     raise
