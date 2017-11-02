@@ -55,6 +55,8 @@ def partition_geocode(con: sqlite3.Connection, cur: sqlite3.Cursor, quarter: str
             continue
         print("[%d] "%(len(identities)) + address)
         results = selective_geocode(address)
+        if not results["lat"] or not results["lon"]:
+            continue
         results["lat"].append(sum(results["lat"]) / len(results["lat"]))
         results["lon"].append(sum(results["lat"]) / len(results["lat"]))
         combined = [num for zipped in zip(results["lat"], results["lon"]) for num in zipped]
