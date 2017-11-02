@@ -63,12 +63,12 @@ def main():
     print("Checking for updates...")
     new_files = update_check()
     file_count = len(new_files)
-    print("Missing %d files\n" %(file_count))
-
-    print("Downloading...")
-    pool = ThreadPool(file_count)
-    pool.map(downloader, new_files)
-    pool.close()
+    if file_count:
+        print("Missing %d files\n" %(file_count))
+        print("Downloading...")
+        pool = ThreadPool(file_count)
+        pool.map(downloader, new_files)
+        pool.close()
     print("\nFinish")
 
 if __name__ == "__main__":
