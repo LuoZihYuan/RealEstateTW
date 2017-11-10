@@ -19,4 +19,4 @@ def open_file(path: str):
     elif sys.platform.startswith("linux"):
         os.system('xdg-open "%s"' %(path))
     elif sys.platform.startswith("win"):
-        os.system('start "%s"' %(path))
+        os.system('%s' %(path))
