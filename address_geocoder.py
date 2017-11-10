@@ -58,7 +58,7 @@ def partition_geocode(con: sqlite3.Connection, cur: sqlite3.Cursor, quarter: str
         if not results["lat"] or not results["lon"]:
             continue
         results["lat"].append(sum(results["lat"]) / len(results["lat"]))
-        results["lon"].append(sum(results["lat"]) / len(results["lat"]))
+        results["lon"].append(sum(results["lon"]) / len(results["lon"]))
         combined = [num for zipped in zip(results["lat"], results["lon"]) for num in zipped]
         values = [(tuple(combined) + identity) for identity in identities]
         cur.executemany('''UPDATE "{0}/GEO" SET
