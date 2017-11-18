@@ -20,13 +20,16 @@ IMPORTED_FOLDERS = "IMPORTED_FOLDERS"
 COUNTY_PRI = ['A', 'B', 'D', 'E', 'F', 'H', 'C', 'G', 'I', 'J', 'K',\
               'M', 'N', 'O', 'P', 'Q', 'T', 'U', 'V', 'W', 'X', 'Z']
 
+# XXX: add input of sample rate
 def selective_geocode(rough_address: str) -> dict:
     """ Gets the average GPS coordinates of the rough address interval """
     lat_results = []; lon_results = []
     found = re.findall(r"\d+~\d+", rough_address)
     if not found:
-        return {"lat": lat_results, "lon": lon_results}
+        raise geo.AddressError(geo.__name__, rough_address)
     bound = [int(i) for i in found[0].split('~')]
+    if bound[0] > bound[1]:
+        raise geo.AddressError(geo.__name__, rough_address)
     interval = int((bound[1] - bound[0] + 1) / settings.GEO_SAMPLES)
     samples = [i for i in range(bound[0], bound[1] + 1, interval)]
     for sample in samples:
@@ -35,9 +38,7 @@ def selective_geocode(rough_address: str) -> dict:
         if gps_coordinates["lat"] and gps_coordinates["lon"]:
             lat_results.append(gps_coordinates["lat"])
             lon_results.append(gps_coordinates["lon"])
-    if lat_results and lon_results:
-        return {"lat": lat_results, "lon": lon_results}
-    raise geo.AddressError(geo.__name__, rough_address)
+    return {"lat": lat_results, "lon": lon_results}
 
 def partition_geocode(con: sqlite3.Connection, cur: sqlite3.Cursor, quarter: str, county_cht: str):
     """ Geocode address of the same county in quarter fashion """
@@ -54,7 +55,10 @@ def partition_geocode(con: sqlite3.Connection, cur: sqlite3.Cursor, quarter: str
         if not identities:
             continue
         print("[%d] "%(len(identities)) + address)
-        results = selective_geocode(address)
+        try:
+            results = selective_geocode(address)
+        except geo.AddressError:
+            continue
         if len(results["lat"]) != 5 or len(results["lon"]) != 5:
             continue
         results["lat"].append(sum(results["lat"]) / len(results["lat"]))
