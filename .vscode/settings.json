@@ -1,0 +1,9 @@
+{
+    // VSCode Settings
+    "editor.tabSize": 4,
+    
+    // Extension Settings
+    "python.linting.pylintArgs": [
+        "--extension-pkg-whitelist=numpy"
+    ]
+}

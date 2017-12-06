@@ -73,7 +73,7 @@ def geocode(address: str, provider:Provider=None, **kwargs):
             raise AddressError(__name__, address)
 
     # won't handle exception if provider is specified
-    if provider and issubclass(provider, Provider):
+    if provider:
         return {"provider": provider.__class__.__name__,
                 "GPS": provider.geocode(address, **kwargs)}
 
