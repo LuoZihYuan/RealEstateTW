@@ -54,7 +54,7 @@ def accuracy(result):
     row_number=len(result.index)
     for i in range(row_number):
         if(origin[i]>0) and (prediction[i]>0):
-            if(prediction[i]/origin[i]>=0.75) and (prediction[i]/origin[i]<=1.25):
+            if(float(prediction[i])/float(origin[i])>=0.75) and (float(prediction[i])/float(origin[i])<=1.25):
                 accurate=accurate+1
     return float(accurate)/float(row_number)
 
