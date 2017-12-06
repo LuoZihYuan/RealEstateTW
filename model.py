@@ -45,10 +45,23 @@ def preprocess_data(raw_df):
     label = normalize_data(label)
     return features, label
 
+def accuracy(result):
+    accurate=0
+    origin=result['總價元']
+    origin=origin.values
+    prediction=result['prediction']
+    prediction=prediction.values
+    row_number=len(result.index)
+    for i in range(row_number):
+        if(origin[i]>0) and (prediction[i]>0):
+            if(prediction[i]/origin[i]>=0.75) and (prediction[i]/origin[i]<=1.25):
+                accurate=accurate+1
+    return float(accurate)/float(row_number)
+
 def main():
     """ Main Function """
     # 連接資料庫
-    conn = sqlite3.connect("data/main.db")
+    conn = sqlite3.connect("resources/main.db")
     # 使用 pandas 函式將目標資料存入 df(DataFrame)
     dframe = pd.read_sql_query('''SELECT * FROM '101S4/BUILD' AS ai0
                                   JOIN '101S4/TRX' AS ai1
@@ -98,6 +111,8 @@ def main():
     df_result['prediction'] = df_result['prediction'] * (maximum - minimum) + minimum
     # 印出前五項資料
     print(df_result[:5])
+    # 印出準確率
+    print(accuracy(df_result))
 
 if __name__ == "__main__":
     main()
