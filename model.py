@@ -46,17 +46,19 @@ def preprocess_data(raw_df):
     return features, label
 
 def accuracy(result):
-    accurate=0
-    origin=result['總價元']
-    origin=origin.values
-    prediction=result['prediction']
-    prediction=prediction.values
-    row_number=len(result.index)
+    """ 計算準確率 """
+    accurate = 0
+    origin = result['總價元']
+    origin = origin.values
+    prediction = result['prediction']
+    prediction = prediction.values
+    row_number = len(result.index)
     for i in range(row_number):
-        if(origin[i]>0) and (prediction[i]>0):
-            if(float(prediction[i])/float(origin[i])>=0.75) and (float(prediction[i])/float(origin[i])<=1.25):
-                accurate=accurate+1
-    return float(accurate)/float(row_number)
+        if (origin[i] > 0) and (prediction[i] > 0):
+            if (float(prediction[i]) / float(origin[i]) >= 0.75) and\
+               (float(prediction[i]) / float(origin[i]) <= 1.25):
+                accurate += 1
+    return float(accurate) / float(row_number)
 
 def main():
     """ Main Function """
