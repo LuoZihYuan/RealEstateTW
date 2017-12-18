@@ -21,3 +21,8 @@ Analyze Real Estate Actual Price Registration open-sourced by the MOI (Ministry 
 > ```bash
 > python3 address_geocoder.py
 > ```
+
+5. Issue the following command to start model training:
+> ```bash
+> python3 model.py
+> ```
