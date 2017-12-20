@@ -35,6 +35,15 @@ def preprocess_data(raw_df):
 
     # 過濾資料欄位
     dframe = dframe[cols]
+    #計算'單價每平方公尺欄位'並把他加到data frame中
+    dframe['單價每平方公尺']=dframe['總價元']/dframe['建物移轉總面積平方公尺']
+    #刪除'總價元'欄位
+    dframe=dframe.drop(['總價元'], axis=1)
+    #刪除'建物移轉總面積平方公尺'欄位
+    dframe=dframe.drop(['建物移轉總面積平方公尺'], axis=1)
+    cols = list(dframe)
+    cols.insert(0, cols.pop(cols.index('單價每平方公尺')))
+    dframe=dframe[cols]
     # 將 DataFrame 轉成 array
     ndarray = dframe.values
     # 將第 0 個欄位(總價元)存入 label
@@ -48,7 +57,7 @@ def preprocess_data(raw_df):
 def accuracy(result):
     """ 計算準確率 """
     accurate = 0
-    origin = result['總價元']
+    origin = result['單價每平方公尺']
     origin = origin.values
     prediction = result['prediction']
     prediction = prediction.values
@@ -105,6 +114,12 @@ def main():
             '親友間交易', '含增建', 'LAT_Avg', 'LON_Avg']
     df_result = dframe.dropna()
     df_result = df_result[cols]
+    df_result['單價每平方公尺']=df_result['總價元']/df_result['建物移轉總面積平方公尺']
+    df_result=df_result.drop(['總價元'], axis=1)
+    df_result=df_result.drop(['建物移轉總面積平方公尺'], axis=1)
+    cols = list(df_result)
+    cols.insert(0, cols.pop(cols.index('單價每平方公尺')))
+    df_result=df_result[cols]
     # 將預測結果加入到欄位中
     df_result.insert(len(df_result.columns), 'prediction', all_prediction)
     maximum = df_result['總價元'].max()
